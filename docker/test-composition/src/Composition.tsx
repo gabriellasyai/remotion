@@ -1,14 +1,42 @@
 import React from 'react';
 import {Composition, staticFile} from 'remotion';
 import {VideoWithSubtitles} from './VideoWithSubtitles';
+import {ViralStressTest} from './ViralStressTest';
 
 export const ScaleTestComp: React.FC = () => {
 	return (
 		<>
+			{/* ── STRESS TEST: Full viral video (~60s) ─── */}
+			<Composition
+				id="ViralStress"
+				component={ViralStressTest}
+				durationInFrames={30 * 60} // 60 seconds
+				fps={30}
+				width={1080}
+				height={1920}
+				defaultProps={{
+					videoSrc: staticFile('test-video.mp4'),
+				}}
+			/>
+
+			{/* ── STRESS TEST: Short version (30s) ─── */}
+			<Composition
+				id="ViralStress30"
+				component={ViralStressTest}
+				durationInFrames={30 * 30} // 30 seconds
+				fps={30}
+				width={1080}
+				height={1920}
+				defaultProps={{
+					videoSrc: staticFile('test-video.mp4'),
+				}}
+			/>
+
+			{/* ── Original test compositions ─── */}
 			<Composition
 				id="VideoSubtitleClip"
 				component={VideoWithSubtitles}
-				durationInFrames={30 * 60} // 60 seconds at 30fps
+				durationInFrames={30 * 60}
 				fps={30}
 				width={1920}
 				height={1080}
@@ -33,7 +61,7 @@ export const ScaleTestComp: React.FC = () => {
 			<Composition
 				id="ShortClip"
 				component={VideoWithSubtitles}
-				durationInFrames={30 * 10} // 10 seconds — for quick tests
+				durationInFrames={30 * 10}
 				fps={30}
 				width={1920}
 				height={1080}
