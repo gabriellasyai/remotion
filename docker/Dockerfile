@@ -161,6 +161,20 @@ COPY docker/scripts /app/scripts
 # Symlink node_modules to reuse monorepo's installed packages
 RUN cd /app/test-composition && ln -sf /app/node_modules node_modules
 
+# ── Ensure test video is valid (LFS might leave a pointer) ──
+RUN VIDEO="/app/test-composition/public/test-video.mp4" && \
+    mkdir -p /app/test-composition/public && \
+    if [ ! -f "$VIDEO" ] || [ $(wc -c < "$VIDEO") -lt 10000 ]; then \
+      echo "Generating test video (LFS file missing or pointer)..." && \
+      ffmpeg -y -f lavfi -i "testsrc2=size=1920x1080:rate=30:duration=30" \
+        -f lavfi -i "sine=frequency=440:duration=30" \
+        -c:v libx264 -preset ultrafast -crf 23 -c:a aac -b:a 128k \
+        "$VIDEO" 2>/dev/null && \
+      echo "Test video generated: $(wc -c < $VIDEO) bytes"; \
+    else \
+      echo "Test video OK: $(wc -c < $VIDEO) bytes"; \
+    fi
+
 # ── Verify setup ────────────────────────────────────────────
 RUN echo "=== NVENC Check ===" && \
     /usr/local/ffmpeg/bin/ffmpeg -hide_banner -encoders 2>&1 | grep nvenc && \
