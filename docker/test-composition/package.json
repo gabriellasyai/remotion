@@ -7,11 +7,11 @@
     "test": "node ../scripts/run-benchmark.mjs"
   },
   "dependencies": {
-    "@remotion/cli": "workspace:*",
-    "@remotion/core": "workspace:*",
-    "@remotion/renderer": "workspace:*",
+    "@remotion/cli": "file:../../packages/cli",
+    "@remotion/bundler": "file:../../packages/bundler",
+    "@remotion/renderer": "file:../../packages/renderer",
     "react": "^19",
     "react-dom": "^19",
-    "remotion": "workspace:*"
+    "remotion": "file:../../packages/core"
   }
 }

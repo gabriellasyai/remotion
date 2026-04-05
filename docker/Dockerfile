@@ -157,7 +157,9 @@ RUN cd /app && node packages/cli/remotion-cli.js browser ensure
 COPY docker/test-composition /app/test-composition
 COPY docker/scripts /app/scripts
 
-RUN cd /app/test-composition && bun install
+# test-composition uses file: deps pointing to monorepo packages
+# Symlink node_modules to reuse monorepo's installed packages
+RUN cd /app/test-composition && ln -sf /app/node_modules node_modules
 
 # ── Verify setup ────────────────────────────────────────────
 RUN echo "=== NVENC Check ===" && \
