@@ -1,7 +1,9 @@
 name: Build Remotion Scale Image
 
 on:
-  workflow_dispatch:  # Manual trigger via GitHub UI
+  push:
+    branches: [scale-rendering]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
