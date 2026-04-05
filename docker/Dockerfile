@@ -85,6 +85,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
     gnupg \
+    unzip \
+    python3 \
+    pip \
     # Chrome/Chromium dependencies
     libnss3 \
     libdbus-1-3 \
