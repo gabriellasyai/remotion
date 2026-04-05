@@ -1,6 +1,11 @@
 import {getCpuCount} from './get-cpu-count';
+import type {LogLevel} from './log-level';
+import {Log} from './logger';
 
-export const resolveConcurrency = (userPreference: number | string | null) => {
+export const resolveConcurrency = (
+	userPreference: number | string | null,
+	options?: {logLevel?: LogLevel; indent?: boolean},
+) => {
 	const maxCpus = getCpuCount();
 
 	if (userPreference === null) {
@@ -18,9 +23,14 @@ export const resolveConcurrency = (userPreference: number | string | null) => {
 	}
 
 	if (rounded > maxCpus) {
-		throw new Error(
-			`Maximum for --concurrency is ${maxCpus} (number of cores on this system)`,
+		Log.warn(
+			{
+				indent: options?.indent ?? false,
+				logLevel: options?.logLevel ?? 'warn',
+			},
+			`Concurrency ${rounded} exceeds CPU count ${maxCpus}. Capping at ${maxCpus}.`,
 		);
+		rounded = maxCpus;
 	}
 
 	if (rounded < min) {
@@ -28,4 +38,10 @@ export const resolveConcurrency = (userPreference: number | string | null) => {
 	}
 
 	return rounded;
+};
+
+/** Returns the recommended per-job concurrency given the number of active jobs */
+export const getRecommendedConcurrency = (activeJobs: number) => {
+	const cpus = getCpuCount();
+	return Math.max(1, Math.min(4, Math.floor(cpus / activeJobs)));
 };

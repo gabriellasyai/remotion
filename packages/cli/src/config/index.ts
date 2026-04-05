@@ -66,6 +66,7 @@ const {
 	videoCodecOption,
 	colorSpaceOption,
 	disallowParallelEncodingOption,
+	forceParallelEncodingOption,
 	deleteAfterOption,
 	folderExpiryOption,
 	enableMultiprocessOnLinuxOption,
@@ -500,6 +501,14 @@ declare global {
 		) => void;
 
 		/**
+		 * Forces the renderer to use parallel encoding (pipe mode) regardless
+		 * of available memory. Default: false
+		 */
+		readonly setForceParallelEncoding: (
+			forceParallelEncoding: boolean,
+		) => void;
+
+		/**
 		 * Enables or disables the Ask AI Modal in Studio
 		 */
 		readonly setAskAIEnabled: (askAIEnabled: boolean) => void;
@@ -754,6 +763,7 @@ export const Config: FlatConfig = {
 	setDeleteAfter: deleteAfterOption.setConfig,
 	setColorSpace: colorSpaceOption.setConfig,
 	setDisallowParallelEncoding: disallowParallelEncodingOption.setConfig,
+	setForceParallelEncoding: forceParallelEncodingOption.setConfig,
 	setBeepOnFinish: beepOnFinishOption.setConfig,
 	setEnableFolderExpiry: folderExpiryOption.setConfig,
 	setRepro: reproOption.setConfig,

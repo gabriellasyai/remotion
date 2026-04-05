@@ -81,6 +81,7 @@ type AddRenderRequestDynamicFields =
 			everyNthFrame: number;
 			numberOfGifLoops: number | null;
 			disallowParallelEncoding: boolean;
+			forceParallelEncoding?: boolean;
 			colorSpace: ColorSpace;
 			repro: boolean;
 			forSeamlessAacConcatenation: boolean;

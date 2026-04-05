@@ -48,6 +48,7 @@ export const handleAddRender: ApiHandler<AddRenderRequest, undefined> = ({
 				numberOfGifLoops: input.numberOfGifLoops,
 				delayRenderTimeout: input.delayRenderTimeout,
 				disallowParallelEncoding: input.disallowParallelEncoding,
+				forceParallelEncoding: input.forceParallelEncoding,
 				chromiumOptions: input.chromiumOptions,
 				envVariables: input.envVariables,
 				serializedInputPropsWithCustomSchema:

@@ -110,6 +110,8 @@ export const processVideoJob = async ({
 		audioCodec: job.type === 'video' ? job.audioCodec : null,
 		disallowParallelEncoding:
 			job.type === 'video' ? job.disallowParallelEncoding : false,
+		forceParallelEncoding:
+			job.type === 'video' ? (job.forceParallelEncoding ?? false) : false,
 		offthreadVideoCacheSizeInBytes: job.offthreadVideoCacheSizeInBytes,
 		colorSpace: job.type === 'video' ? job.colorSpace : null,
 		repro: job.repro,

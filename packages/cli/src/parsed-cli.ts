@@ -13,6 +13,7 @@ const {
 	colorSpaceOption,
 	concurrencyOption,
 	disallowParallelEncodingOption,
+	forceParallelEncodingOption,
 	offthreadVideoCacheSizeInBytesOption,
 	encodingBufferSizeOption,
 	encodingMaxRateOption,
@@ -106,6 +107,9 @@ export type CommandLineOptions = {
 	[colorSpaceOption.cliFlag]: TypeOfOption<typeof colorSpaceOption>;
 	[disallowParallelEncodingOption.cliFlag]: TypeOfOption<
 		typeof disallowParallelEncodingOption
+	>;
+	[forceParallelEncodingOption.cliFlag]: TypeOfOption<
+		typeof forceParallelEncodingOption
 	>;
 	[beepOnFinishOption.cliFlag]: TypeOfOption<typeof beepOnFinishOption>;
 	[versionFlagOption.cliFlag]: TypeOfOption<typeof versionFlagOption>;
@@ -203,6 +207,7 @@ export const BooleanFlags = [
 	beepOnFinishOption.cliFlag,
 	disableGitSourceOption.cliFlag,
 	disallowParallelEncodingOption.cliFlag,
+	forceParallelEncodingOption.cliFlag,
 	forSeamlessAacConcatenationOption.cliFlag,
 	reproOption.cliFlag,
 	isProductionOption.cliFlag,

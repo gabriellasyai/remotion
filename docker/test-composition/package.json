@@ -1,0 +1,17 @@
+{
+  "name": "remotion-scale-test",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "remotion bundle --public-dir=./public",
+    "test": "node ../scripts/run-benchmark.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "workspace:*",
+    "@remotion/core": "workspace:*",
+    "@remotion/renderer": "workspace:*",
+    "react": "^19",
+    "react-dom": "^19",
+    "remotion": "workspace:*"
+  }
+}

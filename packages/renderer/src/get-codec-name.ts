@@ -1,6 +1,7 @@
 import type {Codec} from './codec';
 import type {LogLevel} from './log-level';
 import {Log} from './logger';
+import {isNvencAvailableCached} from './nvenc-detection';
 import type {HardwareAccelerationOption} from './options/hardware-acceleration';
 
 export type CodecSettings = {
@@ -12,10 +13,12 @@ export const hasSpecifiedUnsupportedHardwareQualifySettings = ({
 	encodingMaxRate,
 	encodingBufferSize,
 	crf,
+	nvencSupported,
 }: {
 	encodingMaxRate: string | null;
 	encodingBufferSize: string | null;
 	crf: unknown;
+	nvencSupported?: boolean;
 }) => {
 	if (encodingBufferSize !== null) {
 		return 'encodingBufferSize';
@@ -25,7 +28,9 @@ export const hasSpecifiedUnsupportedHardwareQualifySettings = ({
 		return 'encodingMaxRate';
 	}
 
-	if (crf !== null && typeof crf !== 'undefined') {
+	// NVENC supports CRF via -cq (constant quality), so don't flag it
+	// as unsupported when NVENC is available
+	if (crf !== null && typeof crf !== 'undefined' && !nvencSupported) {
 		return 'crf';
 	}
 
@@ -53,11 +58,17 @@ export const getCodecName = ({
 		hardwareAcceleration === 'required' ||
 		hardwareAcceleration === 'if-possible';
 
+	// Check if NVENC is potentially available on this platform
+	const nvencPlatform =
+		process.platform === 'linux' || process.platform === 'win32';
+	const nvencSupported = nvencPlatform && isNvencAvailableCached();
+
 	const unsupportedQualityOption =
 		hasSpecifiedUnsupportedHardwareQualifySettings({
 			encodingMaxRate,
 			encodingBufferSize,
 			crf,
+			nvencSupported,
 		});
 
 	if (hardwareAcceleration === 'required' && unsupportedQualityOption) {
@@ -98,6 +109,26 @@ export const getCodecName = ({
 			return {encoderName: 'h264_videotoolbox', hardwareAccelerated: true};
 		}
 
+		if (
+			preferredHwAcceleration &&
+			(process.platform === 'linux' || process.platform === 'win32')
+		) {
+			if (isNvencAvailableCached()) {
+				return {encoderName: 'h264_nvenc', hardwareAccelerated: true};
+			}
+
+			if (hardwareAcceleration === 'required') {
+				throw new Error(
+					'NVENC hardware acceleration is required but h264_nvenc encoder is not available. Ensure NVIDIA drivers and a supported GPU are installed.',
+				);
+			}
+
+			Log.warn(
+				{indent, logLevel},
+				`${indent ? '' : '\n'}NVENC hardware acceleration not available, falling back to software encoding (libx264)`,
+			);
+		}
+
 		warnAboutDisabledHardwareAcceleration();
 
 		return {encoderName: 'libx264', hardwareAccelerated: false};
@@ -110,6 +141,26 @@ export const getCodecName = ({
 			!unsupportedQualityOption
 		) {
 			return {encoderName: 'hevc_videotoolbox', hardwareAccelerated: true};
+		}
+
+		if (
+			preferredHwAcceleration &&
+			(process.platform === 'linux' || process.platform === 'win32')
+		) {
+			if (isNvencAvailableCached()) {
+				return {encoderName: 'hevc_nvenc', hardwareAccelerated: true};
+			}
+
+			if (hardwareAcceleration === 'required') {
+				throw new Error(
+					'NVENC hardware acceleration is required but hevc_nvenc encoder is not available. Ensure NVIDIA drivers and a supported GPU are installed.',
+				);
+			}
+
+			Log.warn(
+				{indent, logLevel},
+				`${indent ? '' : '\n'}NVENC hardware acceleration not available, falling back to software encoding (libx265)`,
+			);
 		}
 
 		warnAboutDisabledHardwareAcceleration();
@@ -150,10 +201,26 @@ export const getCodecName = ({
 	}
 
 	if (codec === 'h264-mkv') {
+		if (
+			preferredHwAcceleration &&
+			(process.platform === 'linux' || process.platform === 'win32') &&
+			isNvencAvailableCached()
+		) {
+			return {encoderName: 'h264_nvenc', hardwareAccelerated: true};
+		}
+
 		return {encoderName: 'libx264', hardwareAccelerated: false};
 	}
 
 	if (codec === 'h264-ts') {
+		if (
+			preferredHwAcceleration &&
+			(process.platform === 'linux' || process.platform === 'win32') &&
+			isNvencAvailableCached()
+		) {
+			return {encoderName: 'h264_nvenc', hardwareAccelerated: true};
+		}
+
 		return {encoderName: 'libx264', hardwareAccelerated: false};
 	}
 

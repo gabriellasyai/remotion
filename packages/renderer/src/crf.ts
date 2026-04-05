@@ -53,6 +53,14 @@ export const getValidCrfRanges = (codec: Codec): [number, number] => {
 	return val;
 };
 
+const isNvencEncoder = (encoderName: string | null): boolean => {
+	if (!encoderName) {
+		return false;
+	}
+
+	return encoderName === 'h264_nvenc' || encoderName === 'hevc_nvenc';
+};
+
 export const validateQualitySettings = ({
 	codec,
 	crf,
@@ -60,6 +68,7 @@ export const validateQualitySettings = ({
 	encodingMaxRate,
 	encodingBufferSize,
 	hardwareAcceleration,
+	encoderName,
 }: {
 	crf: unknown;
 	codec: Codec;
@@ -67,6 +76,7 @@ export const validateQualitySettings = ({
 	encodingMaxRate: string | null;
 	encodingBufferSize: string | null;
 	hardwareAcceleration: HardwareAccelerationOption;
+	encoderName?: string | null;
 }): string[] => {
 	if (crf && videoBitrate) {
 		throw new Error(
@@ -74,7 +84,11 @@ export const validateQualitySettings = ({
 		);
 	}
 
-	if (crf && hardwareAcceleration === 'required') {
+	const usingNvenc = isNvencEncoder(encoderName ?? null);
+
+	// NVENC supports quality control via -cq, so only block CRF for
+	// non-NVENC hardware acceleration (e.g., VideoToolbox)
+	if (crf && hardwareAcceleration === 'required' && !usingNvenc) {
 		throw new Error('"crf" option is not supported with hardware acceleration');
 	}
 
@@ -107,6 +121,18 @@ export const validateQualitySettings = ({
 		const actualCrf = getDefaultCrfForCodec(codec);
 		if (actualCrf === null) {
 			return [...bufSizeArray, ...maxRateArray];
+		}
+
+		// NVENC uses -cq (constant quality) with -rc constqp instead of -crf
+		if (usingNvenc) {
+			return [
+				'-rc',
+				'constqp',
+				'-cq',
+				String(actualCrf),
+				...bufSizeArray,
+				...maxRateArray,
+			];
 		}
 
 		return ['-crf', String(actualCrf), ...bufSizeArray, ...maxRateArray];
@@ -148,6 +174,18 @@ export const validateQualitySettings = ({
 	if (isAudioCodec(codec)) {
 		console.warn(`${codec} does not support the "crf" option. Ignoring.`);
 		return [];
+	}
+
+	// NVENC uses -cq (constant quality) with -rc constqp instead of -crf
+	if (usingNvenc) {
+		return [
+			'-rc',
+			'constqp',
+			'-cq',
+			String(crf),
+			...bufSizeArray,
+			...maxRateArray,
+		];
 	}
 
 	return ['-crf', String(crf), ...bufSizeArray, ...maxRateArray];

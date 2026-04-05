@@ -12,6 +12,7 @@ import {DEFAULT_BROWSER} from './browser';
 import type {BrowserExecutable} from './browser-executable';
 import type {BrowserLog} from './browser-log';
 import type {HeadlessBrowser} from './browser/Browser';
+import type {BrowserPoolManager} from './browser-pool';
 import {defaultBrowserDownloadProgress} from './browser/browser-download-progress-bar';
 import type {OnLog, Page} from './browser/BrowserPage';
 import {isTargetClosedErr} from './browser/flaky-errors';
@@ -100,6 +101,7 @@ type InternalRenderFramesOptions = {
 	compositionStart: number;
 	onArtifact: OnArtifact | null;
 	onLog: OnLog;
+	browserPool: BrowserPoolManager | undefined;
 } & ToOptions<typeof optionsMap.renderFrames>;
 
 type InnerRenderFramesOptions = {
@@ -201,6 +203,7 @@ export type RenderFramesOptions = Prettify<
 		concurrency?: number | string | null;
 		onArtifact?: OnArtifact | null;
 		serveUrl: string;
+		browserPool?: BrowserPoolManager;
 	} & Partial<ToOptions<typeof optionsMap.renderFrames>>
 >;
 
@@ -491,6 +494,7 @@ const internalRenderFramesRaw = ({
 	imageSequencePattern,
 	mediaCacheSizeInBytes,
 	onLog,
+	browserPool,
 }: InternalRenderFramesOptions): Promise<RenderFramesOutput> => {
 	validateDimension(
 		composition.height,
@@ -515,20 +519,31 @@ const internalRenderFramesRaw = ({
 	validateJpegQuality(jpegQuality);
 	validateScale(scale);
 
-	const makeBrowser = () =>
-		internalOpenBrowser({
-			browser: DEFAULT_BROWSER,
-			browserExecutable,
-			chromiumOptions,
-			forceDeviceScaleFactor: scale,
-			indent,
-			viewport: null,
-			logLevel,
-			onBrowserDownload,
-			chromeMode,
-		});
+	const usePool = Boolean(browserPool) && !puppeteerInstance;
 
-	const browserInstance = puppeteerInstance ?? makeBrowser();
+	const makeBrowser = usePool
+		? browserPool!.makeBrowserFactory()
+		: () =>
+				internalOpenBrowser({
+					browser: DEFAULT_BROWSER,
+					browserExecutable,
+					chromiumOptions,
+					forceDeviceScaleFactor: scale,
+					indent,
+					viewport: null,
+					logLevel,
+					onBrowserDownload,
+					chromeMode,
+				});
+
+	const browserInstance: HeadlessBrowser | Promise<HeadlessBrowser> = usePool
+		? browserPool!.acquireBrowser().then((result) => {
+				poolRelease = result.release;
+				return result.browser;
+			})
+		: (puppeteerInstance ?? makeBrowser());
+
+	let poolRelease: (() => void) | null = null;
 
 	const resolvedConcurrency = resolveConcurrency(concurrency);
 
@@ -648,9 +663,19 @@ const internalRenderFramesRaw = ({
 			.finally(() => {
 				// If browser instance was passed in, we close all the pages
 				// we opened.
+				// If using a browser pool, release the browser back to the pool.
 				// If new browser was opened, then closing the browser as a cleanup.
 
-				if (puppeteerInstance) {
+				if (usePool && poolRelease) {
+					Promise.all(openedPages.map((p) => p.close())).catch((err) => {
+						if (isTargetClosedErr(err)) {
+							return;
+						}
+
+						Log.error({indent, logLevel}, 'Unable to close browser tab', err);
+					});
+					poolRelease();
+				} else if (puppeteerInstance) {
 					Promise.all(openedPages.map((p) => p.close())).catch((err) => {
 						if (isTargetClosedErr(err)) {
 							return;
@@ -727,6 +752,7 @@ export const renderFrames = (
 		offthreadVideoThreads,
 		imageSequencePattern,
 		mediaCacheSizeInBytes,
+		browserPool,
 	} = options;
 
 	if (!composition) {
@@ -804,5 +830,6 @@ export const renderFrames = (
 		imageSequencePattern: imageSequencePattern ?? null,
 		mediaCacheSizeInBytes: mediaCacheSizeInBytes ?? null,
 		onLog: defaultOnLog,
+		browserPool: browserPool ?? undefined,
 	});
 };

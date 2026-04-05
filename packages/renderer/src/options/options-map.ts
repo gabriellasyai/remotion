@@ -7,6 +7,7 @@ import {colorSpaceOption} from './color-space';
 import {crfOption} from './crf';
 import {deleteAfterOption} from './delete-after';
 import {disallowParallelEncodingOption} from './disallow-parallel-encoding';
+import {forceParallelEncodingOption} from './force-parallel-encoding';
 import {encodingBufferSizeOption} from './encoding-buffer-size';
 import {encodingMaxRateOption} from './encoding-max-rate';
 import {enforceAudioOption} from './enforce-audio';
@@ -45,6 +46,7 @@ export const optionsMap = {
 		colorSpace: colorSpaceOption,
 		codec: videoCodecOption,
 		disallowParallelEncoding: disallowParallelEncodingOption,
+		forceParallelEncoding: forceParallelEncodingOption,
 		jpegQuality: jpegQualityOption,
 		encodingMaxRate: encodingMaxRateOption,
 		encodingBufferSize: encodingBufferSizeOption,

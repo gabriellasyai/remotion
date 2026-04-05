@@ -561,6 +561,7 @@ export const benchmarkCommand = async (
 					audioCodec: null,
 					cancelSignal: undefined,
 					disallowParallelEncoding,
+					forceParallelEncoding: false,
 					indent: false,
 					onBrowserLog: null,
 					onCtrlCExit: () => undefined,

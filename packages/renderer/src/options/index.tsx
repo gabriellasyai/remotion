@@ -31,6 +31,7 @@ import {experimentalVisualModeOption} from './experimental-visual-mode';
 import {folderExpiryOption} from './folder-expiry';
 import {forSeamlessAacConcatenationOption} from './for-seamless-aac-concatenation';
 import {forceNewStudioOption} from './force-new-studio';
+import {forceParallelEncodingOption} from './force-parallel-encoding';
 import {framesOption} from './frames';
 import {glOption} from './gl';
 import {hardwareAccelerationOption} from './hardware-acceleration';
@@ -86,6 +87,7 @@ import {videoCodecOption} from './video-codec';
 import {videoImageFormatOption} from './video-image-format';
 import {webhookCustomDataOption} from './webhook-custom-data';
 import {webpackPollOption} from './webpack-poll';
+import {nvencGpuIndexOption} from './nvenc-gpu-index';
 import {x264Option} from './x264-preset';
 
 export const allOptions = {
@@ -138,6 +140,7 @@ export const allOptions = {
 	disableGitSourceOption,
 	metadataOption,
 	hardwareAccelerationOption,
+	nvencGpuIndexOption,
 	chromeModeOption,
 	apiKeyOption,
 	licenseKeyOption,
@@ -155,6 +158,7 @@ export const allOptions = {
 	keyboardShortcutsOption,
 	framesOption,
 	forceNewStudioOption,
+	forceParallelEncodingOption,
 	numberOfSharedAudioTagsOption,
 	ipv4Option,
 	stillImageFormatOption,

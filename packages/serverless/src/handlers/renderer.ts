@@ -332,6 +332,7 @@ const renderHandler = async <Provider extends CloudProvider>({
 			browserExecutable: providerSpecifics.getChromiumPath(),
 			cancelSignal: undefined,
 			disallowParallelEncoding: false,
+			forceParallelEncoding: false,
 			ffmpegOverride: ({args}) => args,
 			indent: false,
 			onCtrlCExit: () => undefined,

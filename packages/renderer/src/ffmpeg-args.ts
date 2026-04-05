@@ -9,6 +9,37 @@ import type {X264Preset} from './options/x264-preset';
 import type {PixelFormat} from './pixel-format';
 import {truthy} from './truthy';
 
+const NVENC_ENCODERS = ['h264_nvenc', 'hevc_nvenc'];
+
+const isNvencEncoder = (encoderName: string): boolean => {
+	return NVENC_ENCODERS.includes(encoderName);
+};
+
+/**
+ * Maps x264 presets to NVENC preset equivalents (p1-p7).
+ * NVENC presets: p1 (fastest) to p7 (slowest/best quality).
+ */
+const getNvencPreset = (x264Preset: X264Preset | null): string => {
+	if (!x264Preset) {
+		return 'p4'; // medium equivalent
+	}
+
+	const mapping: Record<string, string> = {
+		ultrafast: 'p1',
+		superfast: 'p1',
+		veryfast: 'p2',
+		faster: 'p3',
+		fast: 'p3',
+		medium: 'p4',
+		slow: 'p5',
+		slower: 'p6',
+		veryslow: 'p7',
+		placebo: 'p7',
+	};
+
+	return mapping[x264Preset] ?? 'p4';
+};
+
 const firstEncodingStepOnly = ({
 	hasPreencoded,
 	proResProfileName,
@@ -20,6 +51,8 @@ const firstEncodingStepOnly = ({
 	encodingMaxRate,
 	encodingBufferSize,
 	hardwareAcceleration,
+	encoderName,
+	nvencGpuIndex,
 }: {
 	hasPreencoded: boolean;
 	proResProfileName: string | null;
@@ -31,10 +64,26 @@ const firstEncodingStepOnly = ({
 	encodingMaxRate: string | null;
 	encodingBufferSize: string | null;
 	hardwareAcceleration: HardwareAccelerationOption;
+	encoderName: string;
+	nvencGpuIndex: number | null;
 }): string[][] => {
 	if (hasPreencoded || codec === 'gif') {
 		return [];
 	}
+
+	const useNvenc = isNvencEncoder(encoderName);
+
+	// For NVENC, map x264 presets to NVENC presets (p1-p7)
+	// For software encoders, use x264 presets as-is
+	const presetArgs: string[] | null = useNvenc
+		? ['-preset', getNvencPreset(x264Preset)]
+		: x264Preset
+			? ['-preset', x264Preset]
+			: null;
+
+	// NVENC GPU device selection
+	const gpuArgs: string[] | null =
+		useNvenc ? ['-gpu', String(nvencGpuIndex ?? 0)] : null;
 
 	return [
 		proResProfileName ? ['-profile:v', proResProfileName] : null,
@@ -43,7 +92,8 @@ const firstEncodingStepOnly = ({
 		// Without explicitly disabling auto-alt-ref,
 		// transparent WebM generation doesn't work
 		pixelFormat === 'yuva420p' ? ['-auto-alt-ref', '0'] : null,
-		x264Preset ? ['-preset', x264Preset] : null,
+		presetArgs,
+		gpuArgs,
 		// Apply a fixed a timescale across all environments:
 		// https://discord.com/channels/809501355504959528/817306238811111454/1437471619089170613
 		['-video_track_timescale', '90000'],
@@ -54,6 +104,7 @@ const firstEncodingStepOnly = ({
 			encodingMaxRate,
 			encodingBufferSize,
 			hardwareAcceleration,
+			encoderName,
 		}),
 	].filter(truthy);
 };
@@ -72,6 +123,7 @@ export const generateFfmpegArgs = ({
 	hardwareAcceleration,
 	indent,
 	logLevel,
+	nvencGpuIndex,
 }: {
 	hasPreencoded: boolean;
 	proResProfileName: string | null;
@@ -86,6 +138,7 @@ export const generateFfmpegArgs = ({
 	hardwareAcceleration: HardwareAccelerationOption;
 	indent: boolean;
 	logLevel: LogLevel;
+	nvencGpuIndex?: number | null;
 }): string[][] => {
 	const encoderSettings = getCodecName({
 		codec,
@@ -164,6 +217,8 @@ export const generateFfmpegArgs = ({
 			encodingBufferSize,
 			x264Preset,
 			hardwareAcceleration,
+			encoderName,
+			nvencGpuIndex: nvencGpuIndex ?? null,
 		}),
 	].filter(truthy);
 };

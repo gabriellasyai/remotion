@@ -7,11 +7,13 @@ export const cycleBrowserTabs = ({
 	concurrency,
 	logLevel,
 	indent,
+	cycleIntervalMs,
 }: {
 	puppeteerInstance: BrowserReplacer;
 	concurrency: number;
 	logLevel: LogLevel;
 	indent: boolean;
+	cycleIntervalMs?: number;
 }): {
 	stopCycling: () => void;
 } => {
@@ -51,7 +53,7 @@ export const cycleBrowserTabs = ({
 						set();
 					}
 				});
-		}, 200);
+		}, cycleIntervalMs ?? 200);
 	};
 
 	set();

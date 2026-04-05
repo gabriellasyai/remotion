@@ -155,6 +155,7 @@ type RenderJobDynamicFields =
 			everyNthFrame: number;
 			numberOfGifLoops: number | null;
 			disallowParallelEncoding: boolean;
+			forceParallelEncoding?: boolean;
 			offthreadVideoCacheSizeInBytes: number | null;
 			mediaCacheSizeInBytes: number | null;
 			offthreadVideoThreads: number | null;

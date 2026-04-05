@@ -19,7 +19,7 @@ import {defaultFileExtensionMap} from './file-extensions';
 import {findRemotionRoot} from './find-closest-package-json';
 import {validateFrameRange} from './frame-range';
 import {internalGetCompositions} from './get-compositions';
-import {resolveConcurrency} from './get-concurrency';
+import {getRecommendedConcurrency, resolveConcurrency} from './get-concurrency';
 import {getFramesToRender} from './get-duration-from-frame-range';
 import {
 	defaultCodecsForFileExtension,
@@ -68,6 +68,9 @@ import {validateEvenDimensionsWithCodec} from './validate-even-dimensions-with-c
 export type {RenderMediaOnDownload} from './assets/download-and-map-assets-to-file';
 export type {Bitrate} from './bitrate';
 export {Browser} from './browser';
+export {BrowserPoolManager} from './browser-pool';
+export type {BrowserPoolStats} from './browser-pool';
+export type {BrowserPoolConfig} from './browser-pool-config';
 export {BrowserExecutable} from './browser-executable';
 export {BrowserLog} from './browser-log';
 export type {HeadlessBrowser} from './browser/Browser';
@@ -79,6 +82,25 @@ export {
 	combineChunks,
 } from './combine-chunks';
 export {Crf} from './crf';
+export {
+	initializeNvencDetection,
+	isNvencAvailableCached,
+	getNvencMaxSessions,
+	NVENC_SESSION_LIMITS,
+	type NvencGpuType,
+} from './nvenc-detection';
+export {
+	NvencSessionManager,
+	type NvencSessionLease,
+} from './nvenc-session-manager';
+export {
+	JobScheduler,
+	type RenderJob,
+	type RenderJobStatus,
+	type SchedulerConfig,
+	type RenderMediaResult as SchedulerRenderMediaResult,
+} from './job-scheduler';
+export {AsyncQueue} from './job-queue';
 export {EnsureBrowserOptions, ensureBrowser} from './ensure-browser';
 export {ErrorWithStackFrame} from './error-handling/handle-javascript-exception';
 export {extractAudio} from './extract-audio';
@@ -157,6 +179,7 @@ import {
 } from './options/audio-codec';
 import {DEFAULT_RENDER_FRAMES_OFFTHREAD_VIDEO_THREADS} from './options/offthreadvideo-threads';
 import {printUsefulErrorMessage} from './print-useful-error-message';
+import {getRecommendedScaleConfig, SCALE_DEFAULTS} from './scale-defaults';
 import {getShouldRenderAudio} from './render-has-audio';
 import {toMegabytes} from './to-megabytes';
 import {validatePuppeteerTimeout} from './validate-puppeteer-timeout';
@@ -254,6 +277,9 @@ export const RenderInternals = {
 	canConcatAudioSeamlessly,
 	internalCombineChunks,
 	defaultOnLog,
+	SCALE_DEFAULTS,
+	getRecommendedScaleConfig,
+	getRecommendedConcurrency,
 };
 
 // Warn of potential performance issues with Apple Silicon (M1 chip under Rosetta)

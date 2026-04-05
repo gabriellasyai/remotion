@@ -11,6 +11,7 @@ import type {Bitrate} from './bitrate';
 import type {BrowserExecutable} from './browser-executable';
 import type {BrowserLog} from './browser-log';
 import type {HeadlessBrowser} from './browser/Browser';
+import type {BrowserPoolManager} from './browser-pool';
 import {defaultBrowserDownloadProgress} from './browser/browser-download-progress-bar';
 import type {OnLog} from './browser/BrowserPage';
 import {DEFAULT_TIMEOUT} from './browser/TimeoutSettings';
@@ -156,6 +157,7 @@ export type InternalRenderMediaOptions = {
 	onLog: OnLog;
 	licenseKey: string | null;
 	isProduction: boolean | null;
+	browserPool: BrowserPoolManager | undefined;
 } & MoreRenderMediaOptions;
 
 type Prettify<T> = {
@@ -214,6 +216,7 @@ export type RenderMediaOptions = Prettify<{
 	metadata?: Record<string, string> | null;
 	compositionStart?: number;
 	isProduction?: boolean;
+	browserPool?: BrowserPoolManager;
 }> &
 	EitherApiKeyOrLicenseKey &
 	Partial<MoreRenderMediaOptions>;
@@ -259,6 +262,7 @@ const internalRenderMediaRaw = ({
 	audioCodec,
 	concurrency,
 	disallowParallelEncoding,
+	forceParallelEncoding,
 	everyNthFrame,
 	imageFormat: provisionalImageFormat,
 	indent,
@@ -287,6 +291,7 @@ const internalRenderMediaRaw = ({
 	onLog,
 	licenseKey,
 	isProduction,
+	browserPool,
 }: InternalRenderMediaOptions): Promise<RenderMediaResult> => {
 	const pixelFormat =
 		userPixelFormat ??
@@ -364,15 +369,17 @@ const internalRenderMediaRaw = ({
 
 	const renderStart = Date.now();
 
+	const isHardwareAccelerated = hardwareAcceleration !== 'disable';
 	const {estimatedUsage, freeMemory, hasEnoughMemory} =
 		shouldUseParallelEncoding({
 			height: compositionWithPossibleUnevenDimensions.height,
 			width: compositionWithPossibleUnevenDimensions.width,
 			logLevel,
+			isHardwareAccelerated,
 		});
 	const parallelEncoding =
-		!disallowParallelEncoding &&
-		hasEnoughMemory &&
+		(forceParallelEncoding ||
+			(!disallowParallelEncoding && hasEnoughMemory)) &&
 		canUseParallelEncoding(codec);
 
 	Log.verbose(
@@ -422,6 +429,28 @@ const internalRenderMediaRaw = ({
 				tag: 'renderMedia()',
 			},
 			'User disallowed parallel encoding.',
+		);
+	}
+
+	if (forceParallelEncoding) {
+		Log.verbose(
+			{
+				indent,
+				logLevel,
+				tag: 'renderMedia()',
+			},
+			'User forced parallel encoding (memory check bypassed).',
+		);
+	}
+
+	if (isHardwareAccelerated) {
+		Log.verbose(
+			{
+				indent,
+				logLevel,
+				tag: 'renderMedia()',
+			},
+			'Hardware acceleration is active; using lower memory estimate for parallel encoding.',
 		);
 	}
 
@@ -744,6 +773,7 @@ const internalRenderMediaRaw = ({
 					imageSequencePattern: null,
 					mediaCacheSizeInBytes,
 					onLog,
+					browserPool,
 				});
 
 				return renderFramesProc;
@@ -983,6 +1013,7 @@ export const renderMedia = ({
 	concurrency,
 	serveUrl,
 	disallowParallelEncoding,
+	forceParallelEncoding,
 	everyNthFrame,
 	imageFormat,
 	numberOfGifLoops,
@@ -1006,6 +1037,7 @@ export const renderMedia = ({
 	compositionStart,
 	mediaCacheSizeInBytes,
 	isProduction,
+	browserPool,
 	...apiKeyOrLicenseKey
 }: RenderMediaOptions): Promise<RenderMediaResult> => {
 	const indent = false;
@@ -1038,6 +1070,7 @@ export const renderMedia = ({
 		concurrency: concurrency ?? null,
 		crf: crf ?? null,
 		disallowParallelEncoding: disallowParallelEncoding ?? false,
+		forceParallelEncoding: forceParallelEncoding ?? false,
 		enforceAudioTrack: enforceAudioTrack ?? false,
 		envVariables: envVariables ?? {},
 		everyNthFrame: everyNthFrame ?? 1,
@@ -1101,5 +1134,6 @@ export const renderMedia = ({
 		licenseKey: licenseKey ?? apiKey ?? null,
 		onLog: defaultOnLog,
 		isProduction: isProduction ?? null,
+		browserPool: browserPool ?? undefined,
 	});
 };

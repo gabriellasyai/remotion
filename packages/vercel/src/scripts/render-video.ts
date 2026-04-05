@@ -137,6 +137,7 @@ try {
 		preferLossless: config.preferLossless,
 		enforceAudioTrack: config.enforceAudioTrack,
 		disallowParallelEncoding: config.disallowParallelEncoding,
+		forceParallelEncoding: false,
 		concurrency: config.concurrency,
 		binariesDirectory: config.binariesDirectory,
 		metadata: config.metadata,
