@@ -157,7 +157,7 @@ export type InternalRenderMediaOptions = {
 	onLog: OnLog;
 	licenseKey: string | null;
 	isProduction: boolean | null;
-	browserPool: BrowserPoolManager | undefined;
+	browserPool?: BrowserPoolManager | undefined;
 } & MoreRenderMediaOptions;
 
 type Prettify<T> = {

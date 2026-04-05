@@ -101,7 +101,7 @@ type InternalRenderFramesOptions = {
 	compositionStart: number;
 	onArtifact: OnArtifact | null;
 	onLog: OnLog;
-	browserPool: BrowserPoolManager | undefined;
+	browserPool?: BrowserPoolManager | undefined;
 } & ToOptions<typeof optionsMap.renderFrames>;
 
 type InnerRenderFramesOptions = {
