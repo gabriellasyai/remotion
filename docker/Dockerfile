@@ -140,7 +140,7 @@ COPY . /app/
 
 # ── Install + Build (only renderer and dependencies) ───────
 RUN bun install --frozen-lockfile || bun install
-RUN npx turbo run make --filter=@remotion/renderer... --filter=@remotion/cli... --no-update-notifier
+RUN npx turbo run make --filter=@remotion/cli... --no-update-notifier
 
 # ── Setup custom binaries directory ─────────────────────────
 # Combines NVENC-enabled FFmpeg with Remotion's compositor binary
