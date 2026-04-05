@@ -546,3 +546,34 @@ NvencSessionManager: waiting for available session...
 ```
 
 This is expected on GeForce GPUs (5 session limit). Jobs queue and proceed as sessions free up. For no limits, use enterprise GPU or set higher `maxConcurrentEncodes`.
+
+---
+
+## Production Benchmark Results (2026-04-05)
+
+All benchmarks ran on **vast.ai** with real video content (68MB, 1080x1920, 1:16 duration).
+
+### Test 1: Simple Composition (10s clip, 1920x1080)
+**Machine:** RTX A6000 (48GB VRAM), 96 cores, 472GB RAM
+
+| Scenario | Total Time | Per Clip | Speedup |
+|----------|-----------|----------|---------|
+| Vanilla (5 sequential, libx264) | 171.2s | 34.2s | 1.0x |
+| Fork (5 concurrent, NVENC+pool) | 86.1s | 17.2s | **1.99x** |
+
+### Test 2: Viral Stress Test (60s clip, 1080x1920, 8 layers)
+**Machine:** NVIDIA L40 (46GB VRAM), 256 cores, 1TB RAM
+**Composition layers:** OffthreadVideo + Ken Burns + Shake + Zoom Pulse + Dynamic Blur + Animated Captions (pop/karaoke/bounce/glow) + Lower Thirds + Particles + Vignette + Flash Transitions + Progress Bar
+
+| Scenario | Total Time | Per Clip | Throughput |
+|----------|-----------|----------|------------|
+| 1 clip (baseline) | 121.9s | 121.9s | 0.5 clips/min |
+| 5 concurrent | 156.9s | 31.4s | 1.9 clips/min |
+| **10 concurrent** | **242.1s** | **24.2s** | **2.5 clips/min** |
+| 20 concurrent | 556.7s | 27.8s | 2.2 clips/min |
+
+**Key findings:**
+- **Sweet spot: 10 concurrent jobs** = maximum throughput (2.5 clips/min)
+- **4.4x speedup** at 20 concurrent vs sequential
+- **60 clips projection:** 28 min (fork) vs 122 min (sequential)
+- Beyond 10 concurrent, diminishing returns due to Chrome memory pressure per tab
