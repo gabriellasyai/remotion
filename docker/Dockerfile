@@ -138,9 +138,9 @@ ENV LD_LIBRARY_PATH="/usr/local/ffmpeg/lib:${LD_LIBRARY_PATH}"
 WORKDIR /app
 COPY . /app/
 
-# ── Install + Build ────────────────────────────────────────
+# ── Install + Build (only renderer and dependencies) ───────
 RUN bun install --frozen-lockfile || bun install
-RUN bun run build
+RUN npx turbo run make --filter=@remotion/renderer --filter=@remotion/cli --filter=@remotion/bundler --filter=@remotion/core --filter=remotion --no-update-notifier
 
 # ── Setup custom binaries directory ─────────────────────────
 # Combines NVENC-enabled FFmpeg with Remotion's compositor binary
