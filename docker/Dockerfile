@@ -151,7 +151,7 @@ RUN mkdir -p /app/custom-bin && \
     chmod +x /app/custom-bin/remotion
 
 # ── Ensure Chrome browser ──────────────────────────────────
-RUN cd /app && npx remotion browser ensure
+RUN cd /app && node_modules/.bin/remotion browser ensure
 
 # ── Copy test assets and scripts ────────────────────────────
 COPY docker/test-composition /app/test-composition
