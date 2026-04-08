@@ -63,7 +63,26 @@ export class BrowserPoolManager {
 
 		Log.verbose(
 			{indent: config.indent, logLevel: config.logLevel},
-			`[BrowserPool] Created pool: maxBrowsers=${config.maxBrowsers}, pagesPerBrowser=${config.pagesPerBrowser}, maxPagesBeforeRecycle=${config.maxPagesBeforeRecycle}`,
+			`[BrowserPool] Creating pool: maxBrowsers=${config.maxBrowsers}, pagesPerBrowser=${config.pagesPerBrowser}, maxPagesBeforeRecycle=${config.maxPagesBeforeRecycle}`,
+		);
+
+		// Eagerly launch all browsers in parallel (not lazy/on-demand)
+		const launchPromises = Array.from(
+			{length: config.maxBrowsers},
+			() => pool.#launchBrowser().catch((err) => {
+				Log.warn(
+					{indent: config.indent, logLevel: config.logLevel},
+					`[BrowserPool] Failed to pre-launch browser: ${err instanceof Error ? err.message : String(err)}`,
+				);
+				return null;
+			}),
+		);
+
+		await Promise.all(launchPromises);
+
+		Log.verbose(
+			{indent: config.indent, logLevel: config.logLevel},
+			`[BrowserPool] Pool ready: ${pool.#entries.length}/${config.maxBrowsers} browsers launched`,
 		);
 
 		return pool;
