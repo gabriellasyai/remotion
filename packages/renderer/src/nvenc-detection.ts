@@ -3,7 +3,7 @@ import type {LogLevel} from './log-level';
 import {Log} from './logger';
 
 export const NVENC_SESSION_LIMITS = {
-	consumer: 5,
+	consumer: Infinity,
 	enterprise: Infinity,
 } as const;
 
