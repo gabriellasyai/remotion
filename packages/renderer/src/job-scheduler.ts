@@ -141,11 +141,20 @@ export class JobScheduler {
 		// the NvencSessionManager as a secondary gate inside the processor.
 		this.#queue = new AsyncQueue<RenderJob>(this.#config.maxConcurrentJobs);
 
-		// Set up NVENC session manager if a GPU type is configured
+		// Set up NVENC session manager
+		// maxConcurrentEncodes overrides the GPU type's default limit
+		const encodeOverride = this.#config.maxConcurrentEncodes > 0
+			? this.#config.maxConcurrentEncodes
+			: undefined;
+
 		if (this.#config.nvencGpuType) {
 			this.#nvencManager = new NvencSessionManager(
 				this.#config.nvencGpuType,
+				encodeOverride,
 			);
+		} else if (encodeOverride) {
+			// No GPU type but explicit encode limit — create manager with consumer default + override
+			this.#nvencManager = new NvencSessionManager('consumer', encodeOverride);
 		} else {
 			this.#nvencManager = null;
 		}

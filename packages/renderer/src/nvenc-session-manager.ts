@@ -23,8 +23,8 @@ export class NvencSessionManager {
 	#waiters: SessionWaiter[] = [];
 	#closed = false;
 
-	constructor(gpuType: NvencGpuType) {
-		this.#maxSessions = getNvencMaxSessions(gpuType);
+	constructor(gpuType: NvencGpuType, maxSessionsOverride?: number) {
+		this.#maxSessions = maxSessionsOverride ?? getNvencMaxSessions(gpuType);
 	}
 
 	/**
